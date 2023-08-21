@@ -15,8 +15,8 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 % \usepackage[colorlinks=true, allcolors=blue]{hyperref}
-\usepackage{xr}
-\externaldocument{supplementary}
+% \usepackage{xr}
+% \externaldocument{supplementary}
 
 
 
@@ -95,10 +95,10 @@ Based on the above issues with MAVEs, this BCB330 project aims to re-evaluate th
 
 \section{Methods} % 3 pages
 \subsection{Reprocessing Maps} 
-To re-process the raw data sets using various versions of MAVEs, we use the TileSeqPro pipeline, which takes the raw sequencing output from a Tileseq MAVE experiment, applies quality filters and error corrections, calculates fitness scores, and generates diagnostic Quality-Control plots. \\ 
+To re-process the raw data sets using various versions of MAVEs, we use the TileSeqPro pipeline, which takes the raw sequencing output from a Tileseq MAVE experiment, applies quality filters and error corrections, calculates fitness scores, and generates diagnostic Quality-Control plots.
+
 % There are two main components in the TileSeq workflow: \href{https://github.com/rothlab/tileseq_mutcount}{TileseqMut} and \href{https://github.com/rothlab/tileseqMave}{TileSeqMave}. 
 % To begin, TileSeqMut aligns the sequencing reads to the reference sequence and uses a Bayesian method to call the most likely true variants. Following this, TileSeqMave, the second component of the TileSeq pipeline, analyzes the variant calling result obtained from the previous steps. It starts by translating variant calls into amino acid changes at the protein-level.  Next, it calculates the enrichment ratios, $log(\phi)$, i.e. the log-ratio between pre- and post-selection frequencies for each given variant and performs error-modeling and quality filtering. Lastly, the "scaleScore" step re-scales the $\log(\phi)$ scores relative to pivot points which represent typical nonsense and synonymous variants. As a result, the final scores are distributed such that 0 represents full loss of function, while 1 represents wildtype-like fitness. The pipeline also includes two QC steps, which generates a series of diagnostic plots.
-
 %Before discussing the differences, you might need a sentence that establishes context for the old pipeline, e.g:
 TileSeqPro improves upon an older ``Legacy'' TileSeq pipeline that was employed in the Roth Lab until recently.
 There are many difference of implementations between TileSeqPro and the Legacy computational pipelines. Most importantly, the Legacy pipeline collapsed the equivalent codon changes early into amino acid changes, before filtering. While this meant that lower quality data could get past the filters, and error correction could not be performed at nucleotide levels, it had the advantage of boosting the number of reads supporting each data point. In contrast, TileSeqPro calculates functional scores for individual codon changes separately, filters out low quality variants based on a number of different criteria such as the low read count (below a certain threshold), and finally combined them into amino acid changes. Thus, TileSeqPro sacrifices data to avoid systematic error, but as a result may potentially suffer from more noise.  
@@ -112,8 +112,9 @@ There are many difference of implementations between TileSeqPro and the Legacy c
 \subsubsection{Precision-Recall Curve}
 
 There are multiple methods available to assess classification performance, including the Precision-Recall Curve (PRC), Receiver-operator characteristic (ROC)\cite{doi:10.1161/CIRCULATIONAHA.105.594929}, Matthew's correlation coefficient (MCC)\cite{chicco2020advantages}, and F-scores\cite{hicks_evaluation_2022}. However, when evaluating different maps, the PRC stands out as the most suitable approach due to its ability to handle class imbalance, a common occurrence in maps where reference set sizes vary. To further alleviate potential biases, a prior-balancing approach\cite{wu_improved_2021} is used to compensate for differences in reference set sizes. 
-To compare the predictions made by the old and updated versions of MAVE, the precision-recall curve (PRC) serves as a straightforward and informative visualization tool.  Precision is defined as the fraction of true positive calls out of all positive calls, or in the context of variant effects, the proportion of correctly predicted pathogenic variants out of all predicted pathogenic variants. On the other hand, recall represents the fraction of true positive calls out of all actual cases, or in the context of variant effects, the fraction of variants correctly identified as pathogenic among all existing pathogenic variants.\cite{Ting2010} 
+To compare the predictions made by the old and updated versions of MAVE, the precision-recall curve (PRC) serves as a straightforward and informative visualization tool.  Precision is defined as the fraction of true positive calls out of all positive calls, or in the context of variant effects, the proportion of correctly predicted pathogenic variants out of all predicted pathogenic variants. On the other hand, recall represents the fraction of true positive calls out of all actual cases, or in the context of variant effects, the fraction of variants correctly identified as pathogenic among all existing pathogenic variants.\cite{james_introduction_2021} 
 %Better cite a statistics textbook here instead of our framework paper. %I moved the definitions here as it seemed to flow better.
+
 Utilizing the PRC offers numerous advantages in evaluating the performance of these prediction maps.  First, since high precision is crucial in the context of clinical decision based on prediction, we can compare the recall level of these maps under the threshold of 90\% precision: the precision-recall curve provides a numerical values (REC90) describing this information. Second, an overall assessment can be made by analyzing the total area under the curve (AUPRC), which provides a summary measurement of the precision-recall curve. 
 
 \subsubsection{Compiling Benchmark Sets} 
@@ -131,7 +132,8 @@ The script provides options that allows users to define specific criteria, inclu
 %Discuss here how you compared maps against VARITY 
 To compare the performance of TileseqPro and the Legacy Tileseq pipelines from another perspective, we did the moving window correlation analysis between Tileseq scores versus VARITY\cite{wu_improved_2021} scores along amino acid positions. VARITY is a computational method for pathogenicity prediction, it provides a probability of pathogenicity scores by harnessing gradiant boosted trees algorithm to weight input training sets, where more close to 1 for variants that are inferred to be pathogenic, and more close to 0 for variants that are inferred to be benign. 
 %Also definitely explain the difference between VARITY_R and VARITY_ER here, since it's referenced later in the results section!
-There are two VARITY models generated by the VARITY framework: VARITY\_R and VARITY\_ER. The VARITY\_R model included rare ClinVar\cite{10.1093/nar/gkx1153} variants with global minor allele frequency (MAF) less than 0.5\% in its core training/ test set; while VARITY\_ER model only included extremely rare ClinVar variants with MAF less than ${10}^{-6}$ in its core set. The score scale of VARITY is completely opposite to which of the fitness score produced by Tileseq pipelines.
+
+There are two VARITY models generated by the VARITY framework: VARITY\_R and VARITY\_ER. The VARITY\_R model included rare ClinVar\cite{10.1093/nar/gkx1153} variants with global minor allele frequency (MAF) less than 0.5\% in its core training/ test set; while VARITY\_ER model only included extremely rare ClinVar variants with MAF less than ${10}^{-6}$ in its core set. The score scale of VARITY is completely opposite to which of the fitness score produced by Tileseq pipelines, therefore, we measured the performance of fitness scores by comparing their anti-correlation with VARITY scores.
 
 
 \subsubsection{Log-likelihood Ratio of Pathogenicity}
@@ -145,7 +147,6 @@ In the context of pathogenicity assessment, the log-likelihood ratio (LLR) for p
 %Some intro here, e.g.
 We first re-calculated the map for SUMO1, one of the first variant effect maps created in the Roth Lab\cite{weile_framework_2017}.
 \subsubsection{Observations from QC results}
-
 
 Examining the distributions of synonymous and nonsense variant enrichment ratios ($\log(\phi)$) relative to marginal frequency (see supplemental Fig. 1) reveals an acceptable separation between the two at a frequency of $10^{-4}$. Given the sequencing depth of 1.5M reads per sample, this suggests an ideal cutoff of 150 reads. After setting filters accordingly, approximately one in three variants were filtered out by the frequency filter and bottleneck filters.
 
@@ -179,7 +180,7 @@ The missense variants enrichment values show a bimodal distribution, two modes a
 % difference between the missense modes and nonsense/synonymous modes/
 \begin{figure}[H]
     \centering
-    \includegraphics[width =.7\textwidth]{Figures/SUMO1/BCE.png}
+    \includegraphics[width =.8\textwidth]{Figures/SUMO1/BCE.png}
     \caption{The enrichment ratio distributions of SUMO1 shows the overall distribution of missense(grey), synonymous(green), and nonsense(red) variants' enrichment values in region 1 of SUMO1 gene. }
     \label{fig:BCE distribution}
 \end{figure}
@@ -215,17 +216,6 @@ Missense and synonymous mutations, were assigned larger estimates of standard er
 
 Overall, the correlation between the fitness scores produced by the two  pipelines is high with Spearman's $\rho = 0.95$ (see supplemental Fig. 4). Interestingly, a moving window analysis of the correlation also indicates slightly less agreement between two in the N-terminal disordered region.
 
-
-% \begin{figure}[H]%
-%     \centering
-%     \subfloat[\centering ]{{\includegraphics[width=.3\textwidth]{Figures/SUMO1/comparison_mutation.png} }}%
-%     \qquad
-%     \subfloat[\centering ]{{\includegraphics[width=.25\textwidth]{Figures/SUMO1/comparison_overall.png} }}%
-%     \qquad
-%     \subfloat[\centering ]{{\includegraphics[width=.3\textwidth]{Figures/SUMO1/spearman_score.png} }}%
-%     \caption{Correlation between TileseqPro and Legacy scores. (a) and (b) show scatter plots for the two versions of fitness scores of SUMO1 with missense variants in gray, nonsense variants in red and synonymous variants in green, (c) Moving window analysis of Spearman's $\rho$ between new and old scores along amino acid position.}%
-%     \label{fig:scatter plot}%
-% \end{figure}
 
 % * Discussion of why there is no good reference set for SUMO1 (not a disease gene) and that PRC and LLR analysis were skipped accordingly.
 \subsubsection{Moving Window Correlation between Fitness Scores and VARITY Scores}
@@ -293,7 +283,7 @@ A comparison between the maps calculated via TileSeqPro and the Legacy pipeline 
     \subfloat[\centering heatmap for CALM1 2023 scores generated by Mavevis]{{\includegraphics[width=.9\textwidth]{Figures/CALM1/new_heatmap.png} }}%
     \qquad
     \subfloat[\centering heatmap for CALM1 2019 scores generated by Mavevis]{{\includegraphics[width=.9\textwidth]{Figures/CALM1/old_heatmap.png} }}%
-    \caption{A comparison of new and old version of CALM1 heatmaps generated by mavevis.}%
+    \caption{A comparison of new and old version of CALM1 heatmaps generated by Mavevis.}%
     \label{fig:final map CALM1}%
 \end{figure}
 
@@ -302,7 +292,7 @@ A comparison between the maps calculated via TileSeqPro and the Legacy pipeline 
 \begin{figure}[H]
     \centering
     \includegraphics[width =.4\textwidth]{Figures/CALM1/update_PRC.png}
-    \caption{Precision-recall Curve for the 2023 and 2019 version of CALM1 maps. The black line represents the curve for 2023 map, and the red line represents the curve for 2019 map. Reference sets this PRC is a combined reference of CALM1, CALM2, and CALM3 (three identical copies of Calmodulin gene) from CLinVar and gnomAD.}
+    \caption{Precision-recall Curve for the 2023 and 2019 version of CALM1 maps. The black line represents the curve for 2023 map, and the red line represents the curve for 2019 map. Reference sets this PRC is a combined reference of CALM1, CALM2, and CALM3 (three identical copies of Calmodulin gene) from ClinVar and gnomAD.}
     \label{fig:PRC for CALM1}
 \end{figure}
 
@@ -369,14 +359,14 @@ Though we threw out lots of codon changes with low marginal frequencies when re-
 
 
 \subsection{MTHFR}
-We also re-processed maps for MTHFR variants in Ala222Val (A222V) background at different folate concentrations, from 12 $\mu$g/ml (f12AV), 25 $\mu$g/ml (f25AV), 100 $\mu$g/ml (f100AV) to 200 $\mu$g/ml (f200AV). The MTHFR variant effect maps\cite{weile_shifting_2021} were first calculated in 2019, and last updated by 2020.
+We also re-processed maps for MTHFR\cite{weile_shifting_2021}. The original maps were measured in two different genetic backgrounds (WT and A222V) and at four different concentrations of folinic acid (12 $\mu$g/ml (f12AV), 25 $\mu$g/ml (f25AV), 100 $\mu$g/ml (f100AV) to 200 $\mu$g/ml (f200AV)). Here we completed reprocessing of the four maps in the A222V background. The MTHFR variant effect maps currently deposited on MaveDB were first calculated in 2019, and last updated by 2020.
 
 \subsubsection{Observations from QC results}
-The library shows an extrapolated average number of 0.941, 0.769, 0.864, and 0.791 amino acid changes per clone for mutagenesis region 1, 2, 3, 4 respectively (see supplemental Fig. 10). Accordingly, the overall coverage presented by the coverage heatmap (see supplemental Fig. 9) appears low, with lots of low-frequency variants, especially in Tiles 10, 18, and 19.
+The MTHFR map was subdivided into four separate mutagenesis regions, which show an extrapolated average number of 0.941, 0.769, 0.864, and 0.791 amino acid changes per clone, respectively (see supplemental Fig. 10). Accordingly, the overall coverage presented by the coverage heatmap (see supplemental Fig. 9) appears low, with lots of low-frequency variants, especially in Tiles 10, 18, and 19.
 
-Inspecting the distribution of nonsense and synonymous MTHFR variants enrichment ratio ($log(\phi)$) relative to marginal frequency thresholds at different folate concentrations (see supplemental Fig. 11), we observed that the separation between enrichment values improved at a frequency of ${10}^{-4.6}$, given the sequencing depth of 2M reads per sample. Therefore, we chose a frequency threshold at 50 corresponding to this observation. After setting filters using this setting, around half of variants were filtered out by the frequency and bottleneck filter.
+Inspecting the distribution of nonsense and synonymous variant enrichment ratios ($\log(\phi)$) relative to marginal frequency thresholds at different folate concentrations (see supplemental Fig. 11), we observed that the separation between enrichment values improved at a frequency of ${10}^{-4.6}$. Given the sequencing depth of 2M reads per sample, we chose a count threshold at 50 corresponding to this observation. After setting filters using this setting, around half of variants were filtered out by the frequency and bottleneck filter.
 
-Following the filtering steps, there is a relatively clear separation between the enrichment values of nonsense and synonymous MTHFR variants (Fig. \ref{fig:enrichment MTHFR}) at four folate concentration settings, we observed that under f200AV, we got the best separation of enrichment values compared to other concentrations. The mode of nonsense variants is located around -0.8, and the mode for synonymous variants is located around -0.03. Whereas the missense variants have only one mode near 0, indicating most missense variants of MTHFR in A222V background are not so damaging.
+Following the filtering steps, there is a relatively clear separation between the enrichment values of nonsense and synonymous MTHFR variants (Fig. \ref{fig:enrichment MTHFR}) at four folate concentrations, with the 200 $\mu g / ml$ folinate condition showing the best separation. The mode of nonsense variants is located around $\log(\phi)=-0.8$, and the mode for synonymous variants is located around -0.03 for region all. However, the modes vary a lot by regions: $\log(\phi)=-0.85$ for nonsense variants and $\log(\phi)=-0.023$ for synonymous variants in Region 1; $\log(\phi)=-1.17$ for nonsense variants and $\log(\phi)=0.084$ for synonymous variants in Region 2; $\log(\phi)=-1.2$ for nonsense variants and $\log(\phi)=-0.23$ for synonymous variants in Region 3; and $\log(\phi)=-0.542$ and $\log(\phi)=-0.04$ for nonsense and synonymous variants in Region 4, respectively. The missense variants have only one mode near 0, indicating most missense variants of MTHFR have relatively mild fitness effects.
 
 \begin{figure}[H]%
     \centering
@@ -393,7 +383,7 @@ Following the filtering steps, there is a relatively clear separation between th
 
 
 
-A comparison between the MTHFR variant effect maps calculated by TileseqPro and the Legacy pipelines is shown in Figure \ref{fig:new MTHFR map} and \ref{fig:old MTHFR map}. The color looks very different in two versions at concentration f12AV, f25AV, and f100AV, especially in the serine-rich region and regulatory domain, where the maps calculated by TileseqPro pipelines are more gain-of-function like (red), while the maps calculated by Legacy pipelines are more synonymous like (white). The reason for this difference is the fitness scores calculated by the Legacy pipelines were flipped and floored.
+A comparison between the MTHFR variant effect maps calculated by TileseqPro and the Legacy pipelines is shown in Figure \ref{fig:new MTHFR map} and \ref{fig:old MTHFR map}. The comparison is complicated by the fact that the maps for f12AV, f25AV, and f100AV available on MaveDB were previously "flipped and floored", i.e. any variants with scores above 1 were inverted by a $f(x)=\frac{1}{x}$ operation and scores below zero were set to exactly zero. This is visible especially in the serine-rich region and regulatory domain, where the maps calculated by TileseqPro pipelines show hypercomplementing variants which are not visible in the MaveDB map.
 
 
 \begin{figure}[H]%
@@ -426,7 +416,7 @@ A comparison between the MTHFR variant effect maps calculated by TileseqPro and 
 
 
 \subsubsection{Precision-recall Curve and Log-likelihood Ratio for Pathogenicity}
-Comparing the performance of our updated TileseqPro version MTHFR maps and the Legacy version by the Precision-recall Curve \ref{fig:PRC MTHFR in A222V Background}, the TileseqPro version outperformed the Legacy version, with greater area under PRC and better recall at 90\% precision. Inspecting the TileseqPro version PRC, and comparing between MTHFR maps at different folate concentrations, the map at 25 $\mu$g/ml (f25AV) performed the with area under PRC of 0.93, and a recall of 75\% at 90\% precision.
+Comparing the performance of our updated TileseqPro version MTHFR maps and the Legacy version by the Precision-recall Curve \ref{fig:PRC MTHFR in A222V Background}, the TileseqPro version outperformed the Legacy version, with greater area under PRC and better recall at 90\% precision. Inspecting the TileseqPro version PRC, and comparing between MTHFR maps at different folate concentrations, the map at 25 $\mu$g/ml (f25AV) performed the best with area under PRC of 0.93, and a recall of 75\% at 90\% precision.
 
 \begin{figure}[H]%
     \centering
@@ -455,23 +445,26 @@ The transformation to log-likelihood ratio for TileseqPro MTHFR maps at differen
 
 
 \subsubsection{Conclusion}
-The TileseqPro version of MTHFR maps outperformed our Legacy version in terms of getting more precision in classifying variants. The fitness scores calculated by the Legacy and TileseqPro pipelines need to be compared after finding the non-flipped and floored scores. 
+The TileseqPro version of MTHFR maps outperformed our Legacy version in terms of getting more precision in classifying variants. However, the fitness scores calculated by the Legacy and TileseqPro pipelines need to be compared again after finding the non-flipped and floored scores. 
 
 
 
 
 \newpage
 \section{Discussion}
-The new and old version of MAVEs pipelines performed similarly in SUMO1 map, but our updated pipelines outperformed the old version in CALM1 map since it is more accurate. By comparing the new and old Mavevis heatmaps for SUMO1 and CALM1, the newer version has less available amino acid changes than the old version, since we filtered out a lot more low quality data than before. To address this problem, machine-learning methods could be applied to impute those "missing spots" in the next step. Other future goals for this project are as follows. First, we will continue re-processing other genes, compare the results with the older version, and give recommendation on optimizing the pipeline implementations. Second, we will try curating benchmark reference sets for disease genes, when there is no good reference available for them. Third, we will document the results for other genes that we already re-processed, including MTHFR, GDI1, TECR, UBE2I to a GitHub wiki page. Furthermore, we will also compare the new and old fitness scores of disease genes to other computational predictors such as, ESM1v\cite{lin2023evolutionary}, and PROVEAN\cite{sandell_fitness_2022}.
+In this BCB330 Project, we successfully re-processed the variant effect maps for several genes using the TileseqPro pipelines. We evaluated their performance by inspecting QC results, comparing fitness scores with the Legacy pipelines, finding the moving window correlation to computational predictor VARITY, and drawing the PRC. We also inferred the fitness score ranges that corresponding to "benign" and "pathogenic" by calculating Log-likelihood of pathogenicity. 
 
+The TileseqPro and the Legacy pipeline performed similarly in SUMO1 map, but TileseqPro outperformed the Legacy pipelines in CALM1 map however at the expense of losing much of its original coverage, since we filtered out a lot more low quality data than before. To address this problem, machine-learning methods could be applied to impute those "missing spots" in the next step. For the MTHFR map in A222V background, TileseqPro pipelines performed better in getting more precision in prediction, but the fitness scores calculated by the TileseqPro and Legacy pipelines need to be compared after re-scaling them. 
 
+Other future goals for this project are as follows: First, we will continue to re-processing more of the existing maps on MaveDB, compare the results with the older version, and give recommendation on optimizing the pipeline implementations. Second, we will try curating benchmark reference sets for disease genes, when there is no good reference available for them. Third, we will continue to document the results for the maps that we already re-processed
+% including GDI1, TECR, UBE2I 
+to a GitHub wiki page. Furthermore, we will also compare the new and old fitness scores of disease genes to other computational predictors such as ESM1v\cite{lin2023evolutionary} and PROVEAN\cite{sandell_fitness_2022}.
 
 
 \section{Supplementary Materials}
-Please find the supplemental figures on GitHub: \href{https://github.com/Bilin22/Tileseq-Score-Comparison/blob/main/BCB330/supplementary.pdf}{Supplementary}
+Supplementary Materials can be found on GitHub at \href{https://github.com/Bilin22/BCB330-Final-Report/blob/main/main/Supplementary.pdf}{Supplementary}
 
 
-\newpage
 \bibliographystyle{unsrt}
 \bibliography{reference}
 
